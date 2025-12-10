@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DDL Tracker — Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>DDL Tracker</h1>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="add.html">Add Task</a>
+      <a href="coin.html">Coin Flip</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="task-section">
+      <h2>Your tasks</h2>
+      <div id="task-list">Loading...</div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTasks(); // from script.js
+    });
+  </script>
+</body>
+</html>
