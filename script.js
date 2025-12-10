@@ -1,13 +1,35 @@
 // ====== 全局任务列表 ======
 let taskList = JSON.parse(localStorage.getItem("tasks") || "[]");
 
+// ====== 日历控制变量 (追踪当前显示的月份) ======
+// 初始化为当前日期
+let currentDate = new Date(); 
+
 // ====== 初始化 ======
 document.addEventListener("DOMContentLoaded", () => {
+    // 初始渲染
     renderTasks();
     renderCalendar();
 
+    // 绑定事件
     document.getElementById("addTaskBtn").addEventListener("click", addTask);
+    document.getElementById("prevMonthBtn").addEventListener("click", () => changeMonth(-1));
+    document.getElementById("nextMonthBtn").addEventListener("click", () => changeMonth(1));
+    document.getElementById("todayBtn").addEventListener("click", goToToday);
 });
+
+// ====== 切换月份的函数 ======
+function changeMonth(delta) {
+    // 设置新的月份
+    currentDate.setMonth(currentDate.getMonth() + delta);
+    renderCalendar();
+}
+
+// ====== 返回今天的函数 ======
+function goToToday() {
+    currentDate = new Date(); // 重置为当前月份
+    renderCalendar();
+}
 
 // ====== 添加任务 ======
 function addTask() {
@@ -21,7 +43,7 @@ function addTask() {
     }
 
     taskList.push({ name, date, color, completed: false });
-    saveTasks();
+    saveTasks(); // saveTasks 会调用 renderTasks 进行排序和渲染
 
     document.getElementById("taskName").value = "";
     document.getElementById("taskDate").value = "";
@@ -50,12 +72,32 @@ function calculateDaysLeft(deadlineDate) {
 }
 
 
-// ====== 渲染左侧任务列表 ======
+// ====== 渲染左侧任务列表 (新增排序功能) ======
 function renderTasks() {
     const list = document.getElementById("taskList");
     list.innerHTML = "";
+    
+    // 【新增功能：按日期排序】
+    // 使用 sort() 方法，将日期字符串转换为 Date 对象进行比较
+    const sortedTaskList = [...taskList].sort((a, b) => {
+        // 先比较日期，确保日期是有效的
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        
+        // 如果日期有效，则按时间戳排序
+        if (dateA && dateB) {
+            return dateA.getTime() - dateB.getTime();
+        }
+        // 如果日期无效，保持原顺序
+        return 0;
+    });
 
-    taskList.forEach((task, index) => {
+
+    sortedTaskList.forEach((task, index) => {
+        // 注意：这里的 index 是 sortedTaskList 中的索引，但 deleteTask 传入的是原始 taskList 的索引
+        // 为了确保删除操作的准确性，我们需要找到该任务在原始 taskList 中的索引
+        const originalIndex = taskList.findIndex(t => t.name === task.name && t.date === task.date && t.color === task.color);
+
         const li = document.createElement("li");
         li.className = "task-item";
         
@@ -75,8 +117,8 @@ function renderTasks() {
                 <br><small>Deadline: <strong>${daysLeft}</strong></small>
             </span>
             <div class="task-actions">
-                <button class="edit-btn" onclick="openEditModal(${index})">Edit</button>
-                <button onclick="deleteTask(${index})">X</button>
+                <button class="edit-btn" onclick="openEditModal(${originalIndex})">Edit</button>
+                <button onclick="deleteTask(${originalIndex})">X</button>
             </div>
         `;
         list.appendChild(li);
@@ -87,21 +129,17 @@ function renderTasks() {
 function openEditModal(index) {
     const task = taskList[index];
 
-    // 提示用户输入新的任务名称
     let newName = prompt("Enter new task name:", task.name);
     if (newName === null || newName.trim() === "") {
-        return; // 用户取消或输入为空
+        return; 
     }
     newName = newName.trim();
 
-    // 提示用户输入新的颜色（由于 prompt 不支持颜色选择器，我们使用文本输入）
-    // 提示用户输入新的颜色代码，默认使用当前颜色
     let newColor = prompt("Enter new task color (e.g., #ff0000 or red):", task.color);
     if (newColor === null || newColor.trim() === "") {
-        newColor = task.color; // 使用旧颜色
+        newColor = task.color; 
     }
 
-    // 更新任务
     taskList[index].name = newName;
     taskList[index].color = newColor.trim();
     
@@ -116,25 +154,28 @@ function deleteTask(i) {
     saveTasks();
 }
 
-// ====== 渲染日历 ======
+// ====== 渲染日历 (现在使用 currentDate 变量) ======
 function renderCalendar() {
     const calendarContainer = document.getElementById("calendar");
     const monthTitleElement = document.getElementById("monthTitle");
     
-    calendarContainer.innerHTML = ""; 
+    calendarContainer.innerHTML = ""; // 清空日历内容
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); 
+    // 使用全局变量 currentDate 获取要渲染的月份
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth(); 
     
-    const today = now.getDate();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    // 获取'今天'的日期信息 (用于高亮标记)
+    const todayReference = new Date();
+    const today = todayReference.getDate();
+    const currentMonth = todayReference.getMonth();
+    const currentYear = todayReference.getFullYear();
 
     const monthNames = ["January", "February", "March", "April", "May", "June",
                         "July", "August", "September", "October", "November", "December"];
-    monthTitleElement.innerText = `${monthNames[month]} ${year}`;
-
+    
+    // 更新月份标题
+    monthTitleElement.innerText = `${monthNames[month]} ${year}`; 
 
     const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -183,22 +224,19 @@ function renderCalendar() {
 
         // 渲染任务标记（多任务堆叠显示）
         if (tasksOnDay.length > 0) {
-            const maxMarkers = Math.min(tasksOnDay.length, 3); // 最多显示 3 个堆叠标记
+            const maxMarkers = Math.min(tasksOnDay.length, 3);
             const taskMarkersContainer = document.createElement("div");
             taskMarkersContainer.className = "task-markers-container";
 
-            // 从后往前渲染，以实现堆叠效果
             for (let i = 0; i < maxMarkers; i++) {
                 const task = tasksOnDay[i];
                 const marker = document.createElement("div");
                 marker.className = "task-marker-stacked";
                 marker.style.backgroundColor = task.color;
-                // 堆叠偏移
                 marker.style.transform = `translate(calc(-50% + ${i * 2}px), calc(-50% + ${i * 2}px))`; 
                 taskMarkersContainer.appendChild(marker);
             }
 
-            // 如果任务超过 3 个，显示数量
             if (tasksOnDay.length > maxMarkers) {
                  const count = document.createElement("span");
                  count.className = "task-count";
