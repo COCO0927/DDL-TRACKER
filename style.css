@@ -32,10 +32,22 @@ body {
     display: flex;
     gap: 8px;
     margin-bottom: 15px;
+    align-items: center; /* 对齐输入框和按钮 */
 }
 
-input {
+.input-section input[type="text"], 
+.input-section input[type="date"] {
     padding: 10px;
+    flex-grow: 1; /* 允许文本和日期输入框伸展 */
+}
+
+/* 颜色选择器固定大小 */
+.input-section input[type="color"] {
+    width: 30px; 
+    height: 30px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
 }
 
 button {
@@ -60,6 +72,18 @@ button {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    
+    /* 任务颜色边框 */
+    border-left: 5px solid #ccc; 
+    transition: border-left 0.3s ease;
+}
+
+/* 倒计时小字体 */
+.task-item small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.85em;
 }
 
 /* 完成任务样式 */
@@ -72,21 +96,42 @@ button {
 .right-panel {
     width: 65%;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .calendar-title {
-    margin-bottom: 10px;
     text-align: center;
+    margin-bottom: 10px;
+}
+
+.calendar-title-info {
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
 }
 
 /* 日历网格 */
 #calendar {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    /* 头部和日期格子都需要占据 7 列 */
+    grid-template-columns: repeat(7, 1fr); 
     gap: 6px;
     background: white;
-    padding: 20px;
+    padding: 15px;
     border-radius: 10px;
+    flex-grow: 1;
+}
+
+/* 星期头部样式 */
+.calendar-header {
+    text-align: center;
+    font-weight: bold;
+    color: #777;
+    padding: 5px 0;
+    border-bottom: 2px solid #eee;
 }
 
 .calendar-day {
@@ -95,14 +140,28 @@ button {
     border-radius: 6px;
     padding: 5px;
     position: relative;
+    text-align: right;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.task-dot {
-    width: 6px;
-    height: 6px;
-    background: red;
+/* 今天的高亮样式 (粉色) */
+.today-highlight {
+    background-color: #ffebee; /* 浅粉色背景 */
+    border: 2px solid #ff4081; /* 亮粉色边框 */
+    color: #ff4081;
+    box-shadow: 0 0 8px rgba(255, 64, 129, 0.3);
+}
+
+/* 任务标记 (取代了原来的红点) */
+.task-marker {
+    /* 放大并居中 */
+    width: 15px; 
+    height: 15px;
     border-radius: 50%;
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    top: 50%; /* 垂直居中 */
+    left: 50%; /* 水平居中 */
+    transform: translate(-50%, -50%); /* 精确定位到中心 */
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
